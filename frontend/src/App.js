@@ -25,6 +25,36 @@ function Login({ setToken }) {
   );
 }
 
+function Signup({ setToken }) {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSignup = async () => {
+    try {
+      await api.post('/auth/signup', { username, email, password });
+      // automatically log the user in after successful signup
+      const params = new URLSearchParams();
+      params.append('username', username);
+      params.append('password', password);
+      const res = await api.post('/auth/login', params);
+      setToken(res.data.access_token);
+    } catch (err) {
+      alert('Signup failed');
+    }
+  };
+
+  return (
+    <div>
+      <h2>Sign Up</h2>
+      <input placeholder="username" value={username} onChange={e => setUsername(e.target.value)} />
+      <input placeholder="email" value={email} onChange={e => setEmail(e.target.value)} />
+      <input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} />
+      <button onClick={handleSignup}>Create Account</button>
+    </div>
+  );
+}
+
 function Feed({ token }) {
   const [posts, setPosts] = useState([]);
   const [caption, setCaption] = useState('');
@@ -79,9 +109,30 @@ function Feed({ token }) {
 
 function App() {
   const [token, setToken] = useState(null);
+  const [showSignup, setShowSignup] = useState(false);
 
   if (!token) {
-    return <Login setToken={setToken} />;
+    return (
+      <div>
+        {showSignup ? (
+          <div>
+            <Signup setToken={setToken} />
+            <p>
+              Already have an account?{' '}
+              <button onClick={() => setShowSignup(false)}>Log in</button>
+            </p>
+          </div>
+        ) : (
+          <div>
+            <Login setToken={setToken} />
+            <p>
+              Need an account?{' '}
+              <button onClick={() => setShowSignup(true)}>Sign up</button>
+            </p>
+          </div>
+        )}
+      </div>
+    );
   }
   return <Feed token={token} />;
 }
